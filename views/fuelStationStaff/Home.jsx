@@ -1,36 +1,28 @@
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import Navbar from './components/Navbar';
 
-export default function Home() {
+export default function Home({ navigation }) {
+  const scanQRCode = () => {
+    navigation.navigate('Scan QR Code');
+  };
+
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.navbar}>
-        <Text style={styles.navbarTitle}>Fuel Token Issuer and Queue Management System</Text>
-        <Button color="#d63447" title='Logout'/>
+    <>
+      <StatusBar style='light'/>
+      <View style={styles.appContainer}>
+        <Navbar navigation={navigation}/>
+        <View style={styles.body}>
+          <Button color="#ff5722" style={styles.scanQRbutton} title='Scan QR Code' onPress={scanQRCode}/>
+        </View>
       </View>
-      <View style={styles.body}>
-        <Button color="#ff5722" style={styles.scanQRbutton} title='Scan QR Code'/>
-      </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   appContainer: {
-    flex: 1,
-    paddingTop: 50
-  },
-  navbar: {
-    flexDirection: "row",
-    backgroundColor: "#d63447",
-    justifyContent: "space-between",
-    alignItems: 'center'
-  },
-  navbarTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    width: '60%',
-    margin: 8
+    flex: 1
   },
   body: {
     flex: 1,

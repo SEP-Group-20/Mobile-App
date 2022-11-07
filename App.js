@@ -1,41 +1,23 @@
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Home from './views/fuelStationStaff/Home';
+import QRCodeScanner from './views/fuelStationStaff/QRCodeScanner';
+import RecordFuelSale from './views/fuelStationStaff/RecordFuelSale';
 
-export default function Home() {
+const Stack = createNativeStackNavigator();
+
+export default function App() {
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.navbar}>
-        <Text style={styles.navbarTitle}>Fuel Token Issuer and Queue Management System</Text>
-        <Button color="#d63447" title='Logout'/>
-      </View>
-      <View style={styles.body}>
-        <Button color="#ff5722" style={styles.scanQRbutton} title='Scan QR Code'/>
-      </View>
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          headerShown: false
+      }}>
+        <Stack.Screen name="Home" component={Home}/>
+        <Stack.Screen name="Scan QR Code" component={QRCodeScanner}/>
+        <Stack.Screen name="Record Fuel Sale" component={RecordFuelSale}/>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  appContainer: {
-    flex: 1,
-    paddingTop: 50
-  },
-  navbar: {
-    flexDirection: "row",
-    backgroundColor: "#d63447",
-    justifyContent: "space-between",
-    alignItems: 'center'
-  },
-  navbarTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    width: '60%',
-    margin: 8
-  },
-  body: {
-    flex: 1,
-    backgroundColor: "#d1cebd",
-    alignItems: 'center',
-    justifyContent: 'center'
-  }
-});
