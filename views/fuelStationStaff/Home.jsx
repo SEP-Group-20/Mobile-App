@@ -1,10 +1,15 @@
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Navbar from './components/Navbar';
 
-export default function Home({ navigation }) {
+export default function Home({ route, navigation }) {
+
+  const { registrationNumber } = route.params;
+
   const scanQRCode = () => {
-    navigation.navigate('Scan QR Code');
+    navigation.navigate('Scan QR Code', {
+      registrationNumber: registrationNumber
+    });
   };
 
   return (
@@ -13,6 +18,9 @@ export default function Home({ navigation }) {
       <View style={styles.appContainer}>
         <Navbar navigation={navigation}/>
         <View style={styles.body}>
+          <Text style={styles.text}>
+            Fuel Station: {registrationNumber}
+          </Text>
           <Button color="#ff5722" style={styles.scanQRbutton} title='Scan QR Code' onPress={scanQRCode}/>
         </View>
       </View>
@@ -29,5 +37,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#d1cebd",
     alignItems: 'center',
     justifyContent: 'center'
-  }
+  },
+  text: {
+    fontSize: 20,
+    marginBottom: 16
+  },
 });

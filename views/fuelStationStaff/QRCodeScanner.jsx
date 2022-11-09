@@ -4,10 +4,12 @@ import { StatusBar } from 'expo-status-bar';
 import { BarCodeScanner } from "expo-barcode-scanner";
 import Navbar from './components/Navbar';
 
-function QRCodeScanner({ navigation }) {
+function QRCodeScanner({ route, navigation }) {
   const [hasPermission, setHasPersmission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [text, setText] = useState("Not set Scanned");
+
+  const { registrationNumber } = route.params;
 
   const askCameraPermission = () => {
     (async () => {
@@ -24,9 +26,9 @@ function QRCodeScanner({ navigation }) {
   const handleScannedQRCode = ({type, data}) => {
     setScanned(true);
     setText(data);
-    console.log("type", type,"data",data);
     navigation.navigate('Record Fuel Sale', {
-      userNIC: data
+      userNIC: data,
+      registrationNumber: registrationNumber
     });
   }
 
