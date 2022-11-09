@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Navbar from "./components/Navbar";
+import { getCustomerDetails, recordFuelSale } from "../../services/FuelStationServices";
 
 function RecordFuelSale({ route, navigation }) {
   const [fuel, setFuel] = useState("");
@@ -9,65 +10,24 @@ function RecordFuelSale({ route, navigation }) {
   const [fuelSale, setFuelSale] = useState("");
   const [fuelSaleValidity, setFuelSaleValidity] = useState(false);
   const [fuelRecordErrMsg, setFuelRecordErrMsg] = useState("");
+  const [customerDetails, setCustomerDetails] = useState({});
   const [customerDetailErrMsg, setCustomerDetailErrMsg] = useState("");
 
-  const { userNIC } = route.params;
+  const { userNIC, registrationNumber} = route.params;
 
-  // TODO: Before submitting the record fuel sale when the page is loaded for the first time
-  // TODO: IN THE FRONTEND
-  //       get the NIC number (from QR code scan and pass it here) and fuel station registration number
-  // TODO: IN THE BACKEND
-  //       get the user Object id, name, fuel allocation, fuel remaining, and registred fuel stations using NIC
-  //       get the fuel station oid and fuel queues using the registration number
-  //       check if the customer is registered in this fuel station
-  //       using the oid of the customer get the vehicles that has been queued and received fuel available notifications
-  //       if there are such vehicles get their vid and fuel types.
-  //       check if those vehicles are queued in this fuel station.
-  //       response if successful
-  //       res = {
-  //         "success": true,
-  //         "userNIC": "123456789V",
-  //         "userName": "Thivindu Paranayapa",
-  //         "fuelAllocation": {
-  //           "Petrol": 20,
-  //           "Diesel": 50
-  //         },
-  //         "fuelReamining": {
-  //           "Petrol": 10,
-  //           "Diesel": 25
-  //         },
-  //         "fuelRequestedVehicles": {
-  //           "233dr454ftv5hvyv5ye4640": "Petrol",
-  //           "esft798ye34764365hbjbjn": "Diesel"
-  //         }
-  //       }
-  //       if there are no problems display the record fuel delivery form
-  //       else display the relevant error message along with the user details
-  //       Ex :- "User not registered in system" - if user cannot be found for the given NIC
-  //             "Not registered in this fuel station" - if user is not registered in this fuel station
-  //             "Vehicle not queued or not notified" - if vehicle is not queued or not notified
-  //             "Vehicle not queued in this fuel station" - if vehicle is not queued in this fuel station
-  //       response if failure
-  //       res = {
-  //         "success": false,
-  //         "message": "User not registered in system"
-  //       }
-  //
-  // TODO: After submitting the record fuel sale
-  // TODO: IN THE FRONTEND
-  //       check if the recorded fuel sale is less than the remaming fuel of the customer
-  //       send the record fuel sale to backend with customer oid fuel type, amount and vehicle oid corresponding to that fuel
-  //       else diaplay error message
-  // TODO: IN THE BACKEND
-  //       deduct the fuel amount form the respective fuel of customer remaining fuel
-  //       remove the vehicle oid from the respective fuel queue
-  //       set the isQueued status of the vehcile to false and notofications sent to 0
-  //       get the mobile number of the customer and send a success notification
-  // TODO: IN THE FRONTEND
-  //       display success message and navigate to home
+  // get details of the customer
+  useEffect(() => {
+    async function fetchCustomerDetails() {
+      const customerDetails = await getCustomerDetails({registrationNumber: registrationNumber, userNIC: userNIC});
 
-  // get customer fuel data
-  const userFuelData = {"petrol": 10, "diesel": 20}
+      if (!customerDetails.data.success)
+        setCustomerDetailErrMsg(customerDetails.data.message);
+      else
+        setCustomerDetails(customerDetails.data.customerDetails);
+    }
+
+    fetchCustomerDetails();
+  }, [userNIC, registrationNumber]);
 
   const handleFuelChange = (inputFuel) => {
     setFuel(inputFuel);
@@ -81,22 +41,31 @@ function RecordFuelSale({ route, navigation }) {
     setFuelRecordErrMsg("");
   };
 
-  const recordFuelSale = () => {
-    if (userFuelData[fuel] >= fuelSale) {
-      console.log("fuel", fuel);
-      console.log("fuelSale", fuelSale);
-      // record fuel sale
-      // display success message
-      // go to home page
+  const handleRecordFuelSale = async () => {
+    if (Object.keys(customerDetails.fuelSaleEligibleVehicles).includes(fuel)) {
+      if (customerDetails.customer.remainingFuel[fuel] >= fuelSale && customerDetails.fuelStation.remainingFuel[fuel] >= fuelSale) {
+
+        // record fuel sale
+        const result = await recordFuelSale({customerDetails: customerDetails, fuel: fuel, fuelSale: fuelSale});
+
+        if (!result.data.success)
+          faliureAlert(); 
+        else
+          successAlert();
+
+      }
+      else
+        setFuelRecordErrMsg("Invalid Fuel Amount!")
     }
-    else {
-      setFuelRecordErrMsg("Invalid Fuel Amount!")
-    }
+    else
+      setFuelRecordErrMsg("Invalid Fuel!")
+
   };
 
   const cancel = () => {
-    console.log("cancel");
-    navigation.navigate('Home');
+    navigation.navigate('Home', {
+      registrationNumber: registrationNumber
+    });  
   }
 
   const validateFuel = (value) => {
@@ -107,6 +76,32 @@ function RecordFuelSale({ route, navigation }) {
     return !isNaN(value) && value != "" && value.toString().indexOf('.') != 0 && value > 0;   
   }
 
+  const faliureAlert = () =>
+    Alert.alert(
+      "Fuel sale recording failed",
+      "Fuel sale recording failed, please try again later.",
+      [
+        { text: "OK", onPress: () => {
+          navigation.navigate('Home', {
+            registrationNumber: registrationNumber
+          });
+        } }
+      ]
+    );
+
+  const successAlert = () =>
+  Alert.alert(
+    "Fuel sale recording succesful",
+    "Fuel sale recording successful, a notification will be sent to the customer.",
+    [
+      { text: "OK", onPress: () => {
+        navigation.navigate('Home', {
+          registrationNumber: registrationNumber
+        });
+      } }
+    ]
+  );
+
   return (
     <>
       <StatusBar style='light'/>
@@ -114,6 +109,7 @@ function RecordFuelSale({ route, navigation }) {
         <Navbar navigation={navigation}/>
         <View style={styles.body}>
           <ScrollView>
+          {Object.keys(customerDetails).length !== 0 ? (
             <View style={styles.customerDetails_recordFuelSale}>
               <View>
                 <View style={styles.formHead}>
@@ -124,16 +120,16 @@ function RecordFuelSale({ route, navigation }) {
                     <Text style={styles.customerDetail}>NIC                        :   {userNIC}</Text>
                   </View>
                   <View style={styles.customerDetailField}>
-                    <Text style={styles.customerDetail}>Name                    :   Thivindu Paranayapa</Text>
+                    <Text style={styles.customerDetail}>Name                    :   {customerDetails.customer.firstName} {customerDetails.customer.lastName}</Text>
                     <Text style={styles.customerDetail}></Text>
                   </View>
                   <View style={styles.customerDetailField}>
-                    <Text style={styles.customerDetail}>Requested Fuel    :   Petrol  ,  Diesel</Text>
+                    <Text style={styles.customerDetail}>Requested Fuel    :   {Object.keys(customerDetails.fuelSaleEligibleVehicles).join('  ,  ')}</Text>
                   </View>
                   <View style={styles.customerDetailField}>
-                    <Text style={styles.customerDetail}>Remaning Fuel     :   Petrol : 10L</Text>
+                    <Text style={styles.customerDetail}>Remaning Fuel     :   Petrol : {customerDetails.customer.remainingFuel["Petrol"]}L</Text>
                   </View>
-                    <Text style={styles.customerDetail}>                                   Diesel : 25L</Text>
+                    <Text style={styles.customerDetail}>                                   Diesel : {customerDetails.customer.remainingFuel["Diesel"]}L</Text>
                 </View>
               </View>
               {customerDetailErrMsg !== "" ? (
@@ -142,34 +138,39 @@ function RecordFuelSale({ route, navigation }) {
                 </View>
               ) : 
                 <View style={styles.recordFuelSaleForm}>
-                <View style={styles.formHead}>
-                  <Text style={styles.formTitle}>Record Fuel Sale</Text>              
-                </View>
-                <Text style={styles.inputLabel}>Fuel</Text>
-                <TextInput style={styles.textInput} placeholder='Enter Fuel' onChangeText={handleFuelChange}/>
-                <Text style={styles.inputLabel}>Fuel Sale</Text>
-                <TextInput style={styles.textInput} placeholder='Enter Fuel Amount' onChangeText={handleFuelSaleChange}/>
-                {fuelRecordErrMsg !== "" ? (
-                  <View style={styles.error}>
-                    <Text style={styles.errorText}>{fuelRecordErrMsg}</Text>
+                  <View style={styles.formHead}>
+                    <Text style={styles.formTitle}>Record Fuel Sale</Text>
                   </View>
-                ) : null}
-                <Button 
-                  color="#ff5722" 
-                  disabled={fuelValidity && fuelSaleValidity ? false : true} 
-                  title='Record Fuel Sale' 
-                  onPress={recordFuelSale}
-                />
-              </View>
+                  <Text style={styles.inputLabel}>Fuel</Text>
+                  <TextInput style={styles.textInput} placeholder='Enter Fuel' onChangeText={handleFuelChange}/>
+                  <Text style={styles.inputLabel}>Fuel Sale</Text>
+                  <TextInput style={styles.textInput} placeholder='Enter Fuel Amount' onChangeText={handleFuelSaleChange}/>
+                  {fuelRecordErrMsg !== "" ? (
+                    <View style={styles.error}>
+                      <Text style={styles.errorText}>{fuelRecordErrMsg}</Text>
+                    </View>
+                  ) : null}
+                  <Button 
+                    color="#ff5722" 
+                    disabled={fuelValidity && fuelSaleValidity ? false : true} 
+                    title='Record Fuel Sale' 
+                    onPress={handleRecordFuelSale}
+                  />
+                </View>
               }
             </View>
-            <View style={styles.cancelButton}>
-              <Button 
-                  color="red" 
-                  title='cancel' 
-                  onPress={cancel}
-              />
+          ) : (
+            <View style={styles.error}>
+              <Text style={styles.errorText}>{customerDetailErrMsg}</Text>
             </View>
+          ) }
+          <View style={styles.cancelButton}>
+            <Button 
+                color="red" 
+                title='cancel' 
+                onPress={cancel}
+            />
+          </View>
           </ScrollView>
         </View>
       </View>
@@ -234,10 +235,10 @@ const styles = StyleSheet.create({
   error: {
     borderWidth: 1,
     borderColor: 'red',
-    backgroundColor: '#ffe0e0',
     borderRadius: 8,
-    marginBottom: 16,
+    margin: 16,
     paddingVertical: 8,
+    backgroundColor: '#ffe0e0',
     alignItems: 'center'
   },
   errorText: {
