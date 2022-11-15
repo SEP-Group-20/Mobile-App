@@ -4,6 +4,9 @@ import Navbar from './components/Navbar';
 
 export default function Home({ route, navigation }) {
 
+  if (route?.params?.registrationNumber === "")
+    navigation.navigate('Login');
+
   const { registrationNumber } = route.params;
 
   const scanQRCode = () => {

@@ -4,10 +4,16 @@ import { StatusBar } from 'expo-status-bar';
 import { BarCodeScanner } from "expo-barcode-scanner";
 import Navbar from './components/Navbar';
 
+const NIC_REGEX =
+  /^([0-9]{9}[x|X|v|V]|[0-9]{12})$/;
+
 function QRCodeScanner({ route, navigation }) {
   const [hasPermission, setHasPersmission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [text, setText] = useState("Not set Scanned");
+
+  if (route?.params?.registrationNumber === "")
+    navigation.navigate('Login');
 
   const { registrationNumber } = route.params;
 
@@ -23,13 +29,19 @@ function QRCodeScanner({ route, navigation }) {
     askCameraPermission();
   }, []);
 
-  const handleScannedQRCode = ({type, data}) => {
+  const handleScannedQRCode = ({data}) => {
     setScanned(true);
-    setText(data);
-    navigation.navigate('Record Fuel Sale', {
-      userNIC: data,
-      registrationNumber: registrationNumber
-    });
+    if (NIC_REGEX.test(data)){
+      setText(data);
+      navigation.navigate('Record Fuel Sale', {
+        userNIC: data,
+        registrationNumber: registrationNumber
+      });      
+    }
+    else {
+      setText("Unrecognized QR code")
+    }
+
   }
 
   // ask for permission
