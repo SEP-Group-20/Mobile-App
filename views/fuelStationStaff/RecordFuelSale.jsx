@@ -13,6 +13,9 @@ function RecordFuelSale({ route, navigation }) {
   const [customerDetails, setCustomerDetails] = useState({});
   const [customerDetailErrMsg, setCustomerDetailErrMsg] = useState("");
 
+  if (route?.params?.registrationNumber === "")
+    navigation.navigate('Login');
+
   const { userNIC, registrationNumber} = route.params;
 
   // get details of the customer
