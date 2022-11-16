@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const APIEndPoint = "http://192.168.1.12:3001/api/auth";
+const APIEndPoint = "http://192.168.1.102:3001/api/auth";
 
 const FSSLogin = (formData) => {
     return axios({
