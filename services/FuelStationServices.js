@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from './HttpsServices';
 
-const APIEndPoint = "http://192.168.1.102:3001/api/fuelStation";
+const APIEndPoint = "/api/customer";
 
 const getCustomerDetails = (formData) => {
     return axios({
