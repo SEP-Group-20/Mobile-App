@@ -1,6 +1,6 @@
 import axios from './HttpsServices';
 
-const APIEndPoint = "/api/customer";
+const APIEndPoint = "/api/fuelStation";
 
 const getCustomerDetails = (formData) => {
     return axios({
