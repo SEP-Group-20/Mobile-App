@@ -2,7 +2,7 @@ import Axios from 'axios';
 
 const axiosInstance = Axios.create({
     withCredentials: true,
-    baseURL: "http://192.168.1.12:3001"
+    baseURL: "https://ftiqms-server.onrender.com"
 });
 
 export default axiosInstance;
